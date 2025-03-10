@@ -1,0 +1,2 @@
+# INDUSFAB
+ is a web-based system designed to help industrial machine shops manage machine utilization and manufacturing quotations more efficiently. Its main goal is to reduce downtime, optimize machine performance, and streamline cost estimation for custom manufacturing jobs. By integrating machine tracking with an automated quotation system, INDUSFAB helps businesses improve operational efficiency, reduce costs, and provide more accurate pricing to their clients.
