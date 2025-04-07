@@ -1,33 +1,40 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Electron + Flask</title>
+  <meta charset="UTF-8">
+  <title>IndusFab Quotation App</title>
+  <style>
+    body { font-family: sans-serif; padding: 2rem; max-width: 900px; margin: auto; }
+    h1, h2 { color: #444; }
+    input, textarea { margin-bottom: 1rem; width: 100%; padding: 0.5rem; font-size: 1rem; }
+    .item { border-bottom: 1px solid #ccc; padding: 1rem 0; }
+    .total { font-size: 1.2rem; font-weight: bold; margin-top: 1rem; }
+    button { padding: 0.5rem 1rem; font-size: 1rem; margin-top: 1rem; }
+  </style>
 </head>
 <body>
-  <h1>User List</h1>
-  <ul id="user-list"></ul>
+  <h1>Industry Machine Quotation</h1>
 
-  <input id="username" placeholder="Enter name" />
-  <button onclick="addUser()">Add</button>
+  <label>Client Name</label>
+  <input type="text" id="clientName" placeholder="Enter client name">
 
-  <script>
-    async function loadUsers() {
-      const res = await fetch('http://localhost:5000/api/users');
-      const users = await res.json();
-      document.getElementById('user-list').innerHTML = users.map(u => `<li>${u[1]}</li>`).join('');
-    }
+  <label>Date</label>
+  <input type="date" id="quoteDate">
 
-    async function addUser() {
-      const name = document.getElementById('username').value;
-      await fetch('http://localhost:5000/api/users', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name })
-      });
-      loadUsers();
-    }
+  <label>Notes</label>
+  <textarea id="notes" rows="3" placeholder="Any additional notes..."></textarea>
 
-    loadUsers();
-  </script>
+  <h2>Select Components</h2>
+  <div id="components"></div>
+
+  <div class="total">Total: $<span id="total">0.00</span></div>
+  <button onclick="submitQuote()">Submit Quote</button>
+
+  <h2>Get Quote By ID</h2>
+  <input type="number" id="quoteId" placeholder="Quote ID">
+  <button onclick="getQuote()">Fetch Quote</button>
+  <pre id="quoteResult"></pre>
+
+  <script src="renderer.js"></script>
 </body>
 </html>
