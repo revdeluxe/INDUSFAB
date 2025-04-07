@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Electron + Flask</title>
+</head>
+<body>
+  <h1>User List</h1>
+  <ul id="user-list"></ul>
+
+  <input id="username" placeholder="Enter name" />
+  <button onclick="addUser()">Add</button>
+
+  <script>
+    async function loadUsers() {
+      const res = await fetch('http://localhost:5000/api/users');
+      const users = await res.json();
+      document.getElementById('user-list').innerHTML = users.map(u => `<li>${u[1]}</li>`).join('');
+    }
+
+    async function addUser() {
+      const name = document.getElementById('username').value;
+      await fetch('http://localhost:5000/api/users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name })
+      });
+      loadUsers();
+    }
+
+    loadUsers();
+  </script>
+</body>
+</html>

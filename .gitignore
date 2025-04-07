@@ -1,0 +1,38 @@
+# === Python ===
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+*.egg-info/
+.env
+*.db
+
+# PyInstaller build folders
+build/
+dist/
+*.spec
+
+# VSCode or JetBrains IDEs
+.vscode/
+.idea/
+
+# === Node / Electron ===
+frontend/node_modules/
+frontend/dist/
+frontend/.parcel-cache/
+frontend/.next/
+frontend/.output/
+frontend/.DS_Store
+frontend/yarn.lock
+frontend/package-lock.json
+
+# Electron build artifacts
+*.log
+*.bak
+*.tmp
+.DS_Store
+
+# === OS Files ===
+Thumbs.db
+.DS_Store
