@@ -1,40 +1,199 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>IndusFab Quotation App</title>
   <style>
-    body { font-family: sans-serif; padding: 2rem; max-width: 900px; margin: auto; }
+    body {
+      font-family: sans-serif;
+      padding: 2rem;
+      max-width: 900px;
+      margin: auto;
+      overflow: scroll;
+    }
     h1, h2 { color: #444; }
-    input, textarea { margin-bottom: 1rem; width: 100%; padding: 0.5rem; font-size: 1rem; }
+    input, textarea {
+      margin-bottom: 1rem;
+      width: 100%;
+      padding: 0.5rem;
+      font-size: 1rem;
+      box-sizing: border-box;
+    }
     .item { border-bottom: 1px solid #ccc; padding: 1rem 0; }
-    .total { font-size: 1.2rem; font-weight: bold; margin-top: 1rem; }
-    button { padding: 0.5rem 1rem; font-size: 1rem; margin-top: 1rem; }
+    .total {
+      font-size: 1.2rem;
+      font-weight: bold;
+      margin-top: 1rem;
+    }
+    button {
+      padding: 0.5rem 1rem;
+      font-size: 1rem;
+      margin-top: 1rem;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1rem;
+    }
+    th, td {
+      border: 1px solid #ccc;
+      padding: 0.5rem;
+      text-align: left;
+    }
+    table input {
+      width: 100%;
+      padding: 0.5rem;
+      font-size: 1rem;
+      border: 1px solid #ccc;
+      box-sizing: border-box;
+    }
   </style>
 </head>
 <body>
-  <h1>Industry Machine Quotation</h1>
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const containers = {
+        quotationContainer: document.getElementById("quotationContainer"),
+        quoteManagementContainer: document.getElementById("quoteManagementContainer"),
+        addComponentContainer: document.getElementById("addComponentContainer")
+      };
 
-  <label>Client Name</label>
-  <input type="text" id="clientName" placeholder="Enter client name">
+      const toggleContainer = (showId) => {
+        Object.entries(containers).forEach(([id, el]) => {
+          el.style.display = (id === showId) ? "block" : "none";
+        });
+      };
 
-  <label>Date</label>
-  <input type="date" id="quoteDate">
+      // Navigation buttons
+      document.getElementById("btnQuotation").addEventListener("click", () => toggleContainer("quotationContainer"));
+      document.getElementById("btnManagement").addEventListener("click", () => toggleContainer("quoteManagementContainer"));
+      document.getElementById("btnAddComponent").addEventListener("click", () => toggleContainer("addComponentContainer"));
 
-  <label>Notes</label>
-  <textarea id="notes" rows="3" placeholder="Any additional notes..."></textarea>
+      // Initial view
+      toggleContainer("quotationContainer");
+    });
+  </script>
 
-  <h2>Select Components</h2>
-  <div id="components"></div>
+  <!-- Navigation Buttons -->
+  <button id="btnQuotation" onclick="toggleContainer('quotationContainer')">Quotation Section</button>
+  <button id="btnManagement" onclick="toggleContainer('quoteManagementContainer')">Quote Management Section</button>
+  <button id="btnAddComponent" onclick="toggleContainer('addComponentContainer')">Add Component</button>
+  <hr>
 
-  <div class="total">Total: $<span id="total">0.00</span></div>
-  <button onclick="submitQuote()">Submit Quote</button>
+  <!-- Quotation Section -->
+  <div id="quotationContainer" style="display: none;">
+    <h1>Industry Machine Quotation</h1>
+    <label>Client Name</label>
+    <input type="text" id="clientName" placeholder="Enter client name" />
 
-  <h2>Get Quote By ID</h2>
-  <input type="number" id="quoteId" placeholder="Quote ID">
-  <button onclick="getQuote()">Fetch Quote</button>
-  <pre id="quoteResult"></pre>
+    <label>Date</label>
+    <input type="date" id="quoteDate" />
 
+    <label>Notes</label>
+    <textarea id="notes" rows="3" placeholder="Any additional notes..."></textarea>
+
+    <h2>Select Components</h2>
+    <table id="componentsTable">
+      <thead>
+        <tr>
+          <th></th>
+          <th>Component</th>
+          <th>Description</th>
+          <th>Unit Price (PHP)</th>
+          <th>Quantity</th>
+          <th>Sub Total (PHP)</th>
+        </tr>
+      </thead>
+      <tbody id="components"></tbody>
+    </table>
+
+    <div class="total">Total: (PHP) <span id="total">0.00</span></div>
+    <button id="submitQuote" onclick="submitQuoteHandler()">Submit Quote</button>
+  </div>
+
+  <!-- Quote Management Section -->
+  <div id="quoteManagementContainer" style="display: none;">
+    <h2>Manage Quotes</h2>
+    <button id="loadAllQuotes" onclick="loadAllQuotes()">View All Quotes</button>
+    <div id="quoteList"></div>
+
+    <label for="importQuotesFromCSV">Import Quotes (CSV)</label>
+    <input type="file" id="importQuotesFromCSV" accept=".csv" onchange="importQuotesFromCSV(event)" />
+
+    <label for="exportQuotesToCSV">Export Quotes (CSV)</label>
+    <button id="exportQuotesToCSV" onclick="exportQuotesToCSV()">Export Quotes</button>
+
+    <h2>Get Quote By ID</h2>
+    <input type="number" id="quoteId" placeholder="Quote ID" />
+    <button id="getQuote" onclick="getQuote()">Fetch Quote</button>
+    <button id="viewQuoteAsPDF" onclick="viewQuoteAsPDF()">View as PDF</button>
+    <pre id="quoteResult"></pre>
+
+    <hr />
+    <button id="viewActive" onclick="loadComponentList(false)">View Active Components</button>
+    <button id="viewArchived" onclick="loadComponentList(true)">View Archived Components</button>
+
+    <h2>Manage Components</h2>
+    <div id="componentList"></div>
+
+    <label for="downloadComponents">Download All Components (CSV)</label>
+    <button id="downloadComponents" onclick="exportComponentsToCSV('Component.csv')">Download CSV</button>
+  </div>
+
+  <!-- Add Component Section -->
+  <div id="addComponentContainer" style="display: none;">
+    <h2>Add New Component</h2>
+    <label for="newName">Component Name</label>
+    <input type="text" id="newName" placeholder="e.g., Motor" />
+
+    <label for="newDescription">Description</label>
+    <input type="text" id="newDescription" placeholder="e.g., 3-phase motor" />
+
+    <label for="newPrice">Unit Price (PHP)</label>
+    <input type="number" id="newPrice" step="0.01" placeholder="e.g., 120.00" />
+
+    <label for="newQuantity">Quantity</label>
+    <input type="number" id="newQuantity" placeholder="e.g., 10" />
+
+    <button id="addComponent" onclick="addComponent()">Add Component</button>
+  </div>
+  <script>
+    // Re-define toggleContainer globally so inline onclicks can access it
+    const containers = {
+      quotationContainer: document.getElementById("quotationContainer"),
+      quoteManagementContainer: document.getElementById("quoteManagementContainer"),
+      addComponentContainer: document.getElementById("addComponentContainer")
+    };
+
+    function toggleContainer(showId) {
+      Object.entries(containers).forEach(([id, el]) => {
+        el.style.display = (id === showId) ? "block" : "none";
+      });
+    }
+
+    // Because submitQuote needs to gather input values and components,
+    // define a wrapper function called by onclick
+    function submitQuoteHandler() {
+      // You can customize this based on your current loadComponent logic
+      // For example:
+      const clientName = document.getElementById("clientName").value;
+      const quoteDate = document.getElementById("quoteDate").value;
+      const notes = document.getElementById("notes").value;
+
+      // Assume loadComponentList or components array is managed inside renderer.js
+      // You can adapt this call accordingly or forward to your existing submitQuote
+      submitQuote({
+        clientName,
+        date: quoteDate,
+        notes,
+        components: [] // fill this properly from your app state
+      });
+    }
+
+    // Similarly, define other global functions if needed (loadQuote, addComponent etc.)
+    // or ensure they are accessible on window from renderer.js
+    
+  </script>
   <script src="renderer.js"></script>
 </body>
 </html>

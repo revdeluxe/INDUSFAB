@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Quotation</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 40px; }
+    h1, h2 { margin-bottom: 0; }
+    p { margin: 4px 0; }
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+    th, td { border: 1px solid #ccc; padding: 8px; }
+    th { background: #eee; }
+  </style>
+</head>
+<body>
+  <script>
+    console.log("Loaded quote:", quote);
+
+  </script>
+  <h1>Quote #<span id="quoteId"></span></h1>
+  <p><strong>Client:</strong> <span id="clientName"></span></p>
+  <p><strong>Date:</strong> <span id="quoteDate"></span></p>
+  <p><strong>Notes:</strong> <span id="notes"></span></p>
+
+  <h2>Items</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Component</th>
+        <th>Description</th>
+        <th>Quantity</th>
+        <th>Unit Price (PHP)</th>
+        <th>Total (PHP)</th>
+      </tr>
+    </thead>
+    <tbody id="itemsTable"></tbody>
+  </table>
+
+  <h3>Total: PHP <span id="totalPrice"></span></h3>
+
+  <script>
+  window.addEventListener("DOMContentLoaded", () => {
+    try {
+      const query = location.search.slice(1);
+      const quote = JSON.parse(decodeURIComponent(query));
+      console.log("Parsed Quote:", quote); // ✅ Debug
+
+      document.getElementById("quoteId").textContent = quote.id;
+      document.getElementById("clientName").textContent = quote.client_name;
+      document.getElementById("quoteDate").textContent = quote.date;
+      document.getElementById("notes").textContent = quote.notes || "";
+
+      const tbody = document.getElementById("itemsTable");
+      let total = 0;
+
+      if (!Array.isArray(quote.items)) {
+        throw new Error("Quote items are missing or malformed");
+      }
+
+      quote.items.forEach(item => {
+        const row = document.createElement("tr");
+        const totalPrice = item.total_price || item.unit_price * item.quantity;
+        total += totalPrice;
+
+        row.innerHTML = `
+          <td>${item.name || "Unnamed"}</td>
+          <td>${item.description || ""}</td>
+          <td>${item.quantity}</td>
+          <td>${(item.unit_price ?? 0).toFixed(2)}</td>
+          <td>${totalPrice.toFixed(2)}</td>
+        `;
+        tbody.appendChild(row);
+      });
+
+      document.getElementById("totalPrice").textContent = total.toFixed(2);
+    } catch (e) {
+      document.body.innerHTML = `<p style="color:red;">Error loading quote: ${e.message}</p>`;
+      console.error("Error rendering quote:", e);
+    }
+  });
+</script>
+
+</body>
+</html>

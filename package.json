@@ -1,0 +1,45 @@
+{
+  "name": "indusfab",
+  "version": "1.0.0",
+  "description": "is a web-based system designed to help industrial machine shops manage machine utilization and manufacturing quotations more efficiently. Its main goal is to reduce downtime, optimize machine performance, and streamline cost estimation for custom manufacturing jobs. By integrating machine tracking with an automated quotation system, INDUSFAB helps businesses improve operational efficiency, reduce costs, and provide more accurate pricing to their clients.",
+  "type": "commonjs",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder",
+    "postinstall": "electron-builder install-app-deps"
+  },
+  "devDependencies": {
+    "electron": "^36.3.2",
+    "electron-rebuild": "^3.2.9",
+    "electron-builder": "^26.0.12"
+  },
+  "dependencies": {
+    "better-sqlite3": "^11.10.0",
+    "pdfkit": "^0.17.1"
+  },
+  "build": {
+    "appId": "com.indusfab.app",
+    "productName": "INDUSFAB Quotation System",
+    "files": [
+      "**/*"
+    ],
+    "directories": {
+      "output": "dist"
+    },
+    "win": {
+      "target": "nsis"
+    }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/revdeluxe/INDUSFAB.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/revdeluxe/INDUSFAB/issues"
+  },
+  "homepage": "https://github.com/revdeluxe/INDUSFAB#readme"
+}
