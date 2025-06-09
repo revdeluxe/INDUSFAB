@@ -2,15 +2,16 @@ const Database = require("better-sqlite3");
 const path = require("path");
 const fs = require("fs");
 const { app } = require("electron");
-
 const appDataPath = app.getPath("appData");
 const dbPath = path.join(appDataPath, "IQS.sqlite3");
+const masterJsonPath = path.join(appDataPath, "master.json");
 
 // Check if the database file exists, if not create a new one
 if (!fs.existsSync(dbPath)) {
   console.log("Database not found. Creating new database at:", dbPath);
   fs.writeFileSync(dbPath, ""); // Create an empty file
 }
+
 
 const db = new Database(dbPath);
 
@@ -110,6 +111,13 @@ function getAllQuotes() {
   });
 }
 
+function deleteQuote(id) {
+  const stmt = db.prepare("DELETE FROM quotes WHERE id = ?");
+  stmt.run(id);
+  
+  // Also delete associated quote items
+  db.prepare("DELETE FROM quote_items WHERE quote_id = ?").run(id);
+}
 
 function getQuote(id) {
   const quote = db.prepare(`SELECT * FROM quotes WHERE id = ?`).get(id);
@@ -128,6 +136,7 @@ function getQuote(id) {
 
 
 module.exports = {
+  initDatabase,
   getComponents,
   exportComponentsToJSON,
   exportComponentsToCSV,
@@ -138,5 +147,6 @@ module.exports = {
   initDatabase,
   createQuote,
   getAllQuotes,
-  getQuote
+  getQuote,
+  deleteQuote
 };

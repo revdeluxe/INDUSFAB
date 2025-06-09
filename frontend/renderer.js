@@ -3,26 +3,82 @@
 ///////////////////////
 // Initial load
 ///////////////////////
-window.addEventListener("DOMContentLoaded", () => {
-  loadComponents();
+
+// This script handles the main functionality of the application, including loading components, managing quotes, and handling UI interactions.
+// It uses the Electron API to interact with the main process and the database.
+// Ensure the DOM is fully loaded before executing any code
+// This is important to ensure all elements are available for manipulation.
+
+document.addEventListener("DOMContentLoaded", () => {
+  (async () => {
+    const containers = {
+      quotationContainer: document.getElementById("quotationContainer"),
+      quoteManagementContainer: document.getElementById("quoteManagementContainer"),
+      addComponentContainer: document.getElementById("addComponentContainer")
+    };
+
+    const toggleContainer = (showId) => {
+      Object.entries(containers).forEach(([id, el]) => {
+        el.style.display = (id === showId) ? "block" : "none";
+      });
+    };
+
+    // Make toggleContainer available globally
+    window.toggleContainer = toggleContainer;
+
+    // Load content and wait until all sections are injected
+    await loadSectionContent();
+
+    // Now that DOM is injected, you can safely bind events
+    document.getElementById("btnQuotation").addEventListener("click", () => toggleContainer("quotationContainer"));
+    document.getElementById("btnManagement").addEventListener("click", () => toggleContainer("quoteManagementContainer"));
+    document.getElementById("btnAddComponent").addEventListener("click", () => toggleContainer("addComponentContainer"));
+
+    // Safe to call now since elements exist
+    if (document.getElementById("components")) await loadComponents();
+    if (document.getElementById("quotesTable")) await loadQuotes();
+    if (document.getElementById("componentTable")) await loadComponentList();
+    if (document.getElementById("quoteList")) await loadAllQuotes();
+
+    // Initial view
+    toggleContainer("quotationContainer");
+  })();
 });
+
 
 ///////////////////////
 // Load components into the table (Quotation Section)
 ///////////////////////
 async function loadComponents() {
   const container = document.getElementById("components");
-  const components = await window.api.getComponents(false);
-  container.innerHTML = "";
+  if (!container) {
+    console.warn("loadComponents skipped: #components element not found.");
+    return;
+  }
 
-  components.forEach(component => {
-    const row = createComponentRow(component);
-    container.appendChild(row);
-  });
+  try {
+    const components = await window.api.getComponents(false);
+    container.innerHTML = "";
 
-  setupEventListeners(container);
+    components.forEach(component => {
+      const row = createComponentRow(component);
+      container.appendChild(row);
+    });
+
+    setupEventListeners(container);
+  } catch (error) {
+    console.error("Failed to load components:", error);
+    alert("Error loading components. Please try again.");
+    location.reload();
+  }
 }
 window.loadComponents = loadComponents;
+
+
+async function refreshComponentTable() {
+  const components = await window.api.getComponents(false);
+  populateComponentTable(components);
+}
 
 ///////////////////////
 // Export components (Quotation Section)
@@ -42,8 +98,38 @@ function exportComponentsToCSV(filename = "components.csv") {
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
+
 }
 window.exportComponentsToCSV = exportComponentsToCSV;
+
+
+async function loadSectionContent() {
+  const quotationHTML = await fetch("sections/quotation.html").then(res => res.text());
+  const managementHTML = await fetch("sections/management.html").then(res => res.text());
+  const addComponentHTML = await fetch("sections/add-component.html").then(res => res.text());
+
+  document.getElementById("quotationContainer").innerHTML = quotationHTML;
+  document.getElementById("quoteManagementContainer").innerHTML = managementHTML;
+  document.getElementById("addComponentContainer").innerHTML = addComponentHTML;
+}
+window.loadSectionContent = loadSectionContent;
+
+function clearQuotationForm() {
+  document.getElementById("clientName").value = "";
+  document.getElementById("quoteDate").value = "";
+  document.getElementById("notes").value = "";
+  
+  // Clear components table (if you have quantities or selected components)
+  const componentsTableBody = document.getElementById("components");
+  if (componentsTableBody) {
+    componentsTableBody.innerHTML = "";  // or reset quantities in rows as needed
+  }
+
+  // Reset total display
+  const totalEl = document.getElementById("total");
+  if (totalEl) totalEl.textContent = "0.00";
+}
+
 
 ///////////////////////
 // setupEventListeners (handles qty changes & checkbox toggles)
@@ -136,7 +222,7 @@ window.calculateTotal = calculateTotal;
 ///////////////////////
 // Submit a quote (called by Submit Quote button)
 ///////////////////////
-function submitQuote() {
+async function submitQuote() {
   const name = document.getElementById("clientName").value;
   const date = document.getElementById("quoteDate").value;
   const notes = document.getElementById("notes").value;
@@ -170,16 +256,32 @@ function submitQuote() {
     notes,
     items
   };
-
+  
+  
   window.electron.invoke("create-quote", quoteObj)
-    .then(quoteId => {
-      alert(`Quote submitted with ID: ${quoteId}`);
-      // Optionally clear form or reload
-    })
-    .catch(err => {
-      console.error("Error submitting quote:", err);
-      alert("Something went wrong while submitting the quote.");
-    });
+  .then(quoteId => {
+    alert(`Quote submitted with ID: ${quoteId}`);
+    // If you have a modal, hide it. Otherwise, just reset the form.
+    if (document.getElementById("modal")) {
+      document.getElementById("modal").style.display = "none";
+    }
+    refreshComponentTable();
+  })
+  .catch(err => {
+    console.error("Error submitting quote:", err);
+    alert("Something went wrong while submitting the quote.");
+    if (document.getElementById("modal")) {
+      document.getElementById("modal").style.display = "none";
+    }
+    refreshComponentTable();
+  });
+  clearAddComponentForm(); // Clear the add component form
+  document.getElementById("clientName").value = ""; // Clear client name input
+  document.getElementById("notes").value = ""; // Clear notes input
+  clearQuotationForm();
+  calculateTotal(); // Reset total display
+  document.getElementById("quoteId").value = ""; // Clear quote ID input
+  document.getElementById("quoteDate").value = ""; // Clear date input  
 }
 window.submitQuote = submitQuote;
 
@@ -241,7 +343,13 @@ async function addComponent() {
   await window.api.addComponent({ name, description, unit_price });
   alert("Component added!");
   loadComponents();
-  clearAddComponentForm();
+  clearAddComponentForm(); // Clear the add component form
+  document.getElementById("clientName").value = ""; // Clear client name input
+  document.getElementById("notes").value = ""; // Clear notes input
+  clearQuotationForm();
+  calculateTotal(); // Reset total display
+  document.getElementById("quoteId").value = ""; // Clear quote ID input
+  document.getElementById("quoteDate").value = ""; // Clear date input  
 }
 window.addComponent = addComponent;
 
@@ -353,6 +461,7 @@ async function loadAllQuotes() {
             <td>
               <button onclick="loadQuote(${quote.id})">View</button>
               <button onclick="viewQuoteAsPDF(${quote.id})">Export PDF</button>
+              <button onclick="deleteQuote(${quote.id})">Delete</button>
             </td>
           </tr>
         `).join("")}
@@ -389,6 +498,19 @@ function getQuote() {
 }
 window.getQuote = getQuote;
 
+async function deleteQuote(id) {
+  if (confirm("Are you sure you want to delete this quote?")) {
+    try {
+      await window.api.deleteQuote(id);
+      alert("Quote deleted successfully.");
+      loadAllQuotes(); // Refresh the list
+    } catch (error) {
+      console.error("Error deleting quote:", error);
+      alert("Failed to delete quote. Please try again.");
+    }
+  }
+}
+
 ///////////////////////
 // View a quote as PDF (called by “View as PDF”)
 ///////////////////////
@@ -422,9 +544,15 @@ window.viewQuoteAsPDF = viewQuoteAsPDF;
 ///////////////////////
 // Load (active or archived) component list (Quote Management section)
 ///////////////////////
+
+let arrayedComponents = [];
+
 async function loadComponentList(archived = false) {
   const list = document.getElementById("componentList");
   const components = await window.api.getComponents(archived);
+  console.log("Components loaded:", components, Array.isArray(components));
+
+  arrayedComponents = components;
 
   list.innerHTML = `
     <table>
@@ -440,6 +568,7 @@ async function loadComponentList(archived = false) {
       </tbody>
     </table>
   `;
+  return arrayedComponents;
 }
 window.loadComponentList = loadComponentList;
 
@@ -567,3 +696,182 @@ function parseCSV(text) {
 }
 window.parseCSV = parseCSV;
 ///////////////////////
+
+
+///////////////////////
+// User Management
+///////////////////////
+async function addUser() {
+  const userName = prompt("Enter new user name:");
+  if (!userName) {
+    alert("User name cannot be empty.");
+    return;
+  }
+  try {
+    await window.api.addUser({ name: userName });
+    alert("User added successfully.");
+    viewUsers();
+  } catch (error) {
+    console.error("Error adding user:", error);
+    alert("Failed to add user.");
+  }
+}
+window.addUser = addUser;
+
+async function removeUser() {
+  const userId = prompt("Enter user ID to remove:");
+  if (!userId) {
+    alert("User ID cannot be empty.");
+    return;
+  }
+  try {
+    await window.api.removeUser(parseInt(userId));
+    alert("User removed successfully.");
+    viewUsers();
+  } catch (error) {
+    console.error("Error removing user:", error);
+    alert("Failed to remove user.");
+  }
+}
+window.removeUser = removeUser;
+
+async function viewUsers() {
+  try {
+    const users = await window.api.getUsers();
+    alert("Users:\n" + users.map(user => `${user.id}: ${user.name}`).join("\n"));
+  } catch (error) {
+    console.error("Error viewing users:", error);
+    alert("Failed to retrieve users.");
+  }
+}
+window.viewUsers = viewUsers;
+
+///////////////////////
+// Content Management
+///////////////////////
+async function addContent() {
+  const content = prompt("Enter new content:");
+  if (!content) {
+    alert("Content cannot be empty.");
+    return;
+  }
+  try {
+    await window.api.addContent({ content });
+    alert("Content added successfully.");
+  } catch (error) {
+    console.error("Error adding content:", error);
+    alert("Failed to add content.");
+  }
+}
+window.addContent = addContent;
+
+async function editContent() {
+  const contentId = prompt("Enter content ID to edit:");
+  const newContent = prompt("Enter new content:");
+  if (!contentId || !newContent) {
+    alert("Content ID and new content cannot be empty.");
+    return;
+  }
+  try {
+    await window.api.editContent(parseInt(contentId), { content: newContent });
+    alert("Content edited successfully.");
+  } catch (error) {
+    console.error("Error editing content:", error);
+    alert("Failed to edit content.");
+  }
+}
+window.editContent = editContent;
+
+async function deleteContent() {
+  const contentId = prompt("Enter content ID to delete:");
+  if (!contentId) {
+    alert("Content ID cannot be empty.");
+    return;
+  }
+  try {
+    await window.api.deleteContent(parseInt(contentId));
+    alert("Content deleted successfully.");
+  } catch (error) {
+    console.error("Error deleting content:", error);
+    alert("Failed to delete content.");
+  }
+}
+window.deleteContent = deleteContent;
+
+///////////////////////
+// System Settings
+///////////////////////
+async function updateSettings() {
+  const settings = prompt("Enter new settings (JSON format):");
+  try {
+    const parsedSettings = JSON.parse(settings);
+    await window.api.updateSettings(parsedSettings);
+    alert("Settings updated successfully.");
+  } catch (error) {
+    console.error("Error updating settings:", error);
+    alert("Failed to update settings.");
+  }
+}
+window.updateSettings = updateSettings;
+
+async function viewLogs() {
+  try {
+    const logs = await window.api.getLogs();
+    alert("Logs:\n" + logs.join("\n"));
+  } catch (error) {
+    console.error("Error viewing logs:", error);
+    alert("Failed to retrieve logs.");
+  }
+}
+window.viewLogs = viewLogs;
+
+async function backupData() {
+  try {
+    const backupPath = await window.api.backupData();
+    alert(`Data backed up successfully to: ${backupPath}`);
+  } catch (error) {
+    console.error("Error backing up data:", error);
+    alert("Failed to backup data.");
+  }
+}
+window.backupData = backupData;
+
+///////////////////////
+// Database Settings
+///////////////////////
+async function configureDatabase() {
+  const config = prompt("Enter database configuration (JSON format):");
+  try {
+    const parsedConfig = JSON.parse(config);
+    await window.api.configureDatabase(parsedConfig);
+    alert("Database configured successfully.");
+  } catch (error) {
+    console.error("Error configuring database:", error);
+    alert("Failed to configure database.");
+  }
+}
+window.configureDatabase = configureDatabase;
+
+async function optimizeDatabase() {
+  try {
+    await window.api.optimizeDatabase();
+    alert("Database optimized successfully.");
+  } catch (error) {
+    console.error("Error optimizing database:", error);
+    alert("Failed to optimize database.");
+  }
+}
+window.optimizeDatabase = optimizeDatabase;
+
+async function clearDatabase() {
+  if (confirm("Are you sure you want to clear the database? This action cannot be undone.")) {
+    try {
+      await window.api.clearDatabase();
+      alert("Database cleared successfully.");
+    } catch (error) {
+      console.error("Error clearing database:", error);
+      alert("Failed to clear database.");
+    }
+  }
+}
+window.clearDatabase = clearDatabase;

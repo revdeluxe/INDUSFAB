@@ -1,0 +1,26 @@
+
+<h2>Manage Quotes</h2>
+<button id="loadAllQuotes" onclick="loadAllQuotes()">View All Quotes</button>
+<div id="quoteList"></div>
+
+<label for="importQuotesFromCSV">Import Quotes (CSV)</label>
+<input type="file" id="importQuotesFromCSV" accept=".csv" onchange="importQuotesFromCSV(event)" />
+
+<label for="exportQuotesToCSV">Export Quotes (CSV)</label>
+<button id="exportQuotesToCSV" onclick="exportQuotesToCSV()">Export Quotes</button>
+
+<h2>Get Quote By ID</h2>
+<input type="number" id="quoteId" placeholder="Quote ID" />
+<button id="getQuote" onclick="getQuote()">Fetch Quote</button>
+<button id="viewQuoteAsPDF" onclick="viewQuoteAsPDF()">View as PDF</button>
+<pre id="quoteResult"></pre>
+
+<hr />
+<button id="viewActive" onclick="loadComponentList(false)">View Active Components</button>
+<button id="viewArchived" onclick="loadComponentList(true)">View Archived Components</button>
+
+<h2>Manage Components</h2>
+<div id="componentList"></div>
+
+<label for="downloadComponents">Download All Components (CSV)</label>
+<button id="downloadComponents" onclick="exportComponentsToCSV('Component.csv')">Download CSV</button>

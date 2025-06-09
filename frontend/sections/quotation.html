@@ -1,0 +1,29 @@
+<h1>Industrial Quotation</h1>
+<label>Client Name</label>
+<input type="text" id="clientName" placeholder="Enter client name" />
+
+<label>Date</label>
+<input type="date" id="quoteDate" />
+
+<label>Notes</label>
+<textarea id="notes" rows="3" placeholder="Any additional notes..."></textarea>
+
+<h2>Select Components</h2>
+
+<table id="componentsTable">
+  <hr>
+  <thead>
+    <tr>
+      <th></th>
+      <th>Component</th>
+      <th>Description</th>
+      <th>Unit Price (PHP)</th>
+      <th>Quantity</th>
+      <th>Sub Total (PHP)</th>
+    </tr>
+  </thead>
+  <tbody id="components"></tbody>
+</table>
+
+<div class="total">Total: (PHP) <span id="total">0.00</span></div>
+<button id="submitQuote" onclick="submitQuoteHandler()">Submit Quote</button>

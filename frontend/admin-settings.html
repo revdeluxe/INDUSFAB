@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Tools</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header>
+        <h1>Admin Tools</h1>
+    </header>
+    <main>
+        <section>
+            <h2>User Management (no login implemented as this is a kiosk version) </h2>
+            <button onclick="addUser()" disabled>Add User</button>
+            <button onclick="removeUser()" disabled>Remove User</button>
+            <button onclick="viewUsers()" disabled>View Users</button>
+        </section>
+        <section>
+            <h2>Content Management</h2>
+            <button onclick="addContent()">Add Content</button>
+            <button onclick="editContent()">Edit Content</button>
+            <button onclick="deleteContent()">Delete Content</button>
+        </section>
+        <section>
+            <h2>System Settings</h2>
+            <button onclick="updateSettings()">Update Settings</button>
+            <button onclick="viewLogs()">View Logs</button>
+            <button onclick="backupData()">Backup Data</button>
+        </section>
+        <section>
+            <h2>Database Settings</h2>
+            <button onclick="configureDatabase()">Configure Database</button>
+            <button onclick="optimizeDatabase()">Optimize Database</button>
+            <button onclick="clearDatabase()">Clear Database</button>
+        </section>
+    </main>
+    <footer>
+        <p>&copy; 2023 Admin Panel</p>
+    </footer>
+    <script src="scripts.js"></script>
+</body>
+</html>

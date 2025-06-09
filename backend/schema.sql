@@ -8,7 +8,6 @@ CREATE TABLE IF NOT EXISTS components (
     archived INTEGER DEFAULT 0
 );
 
-
 -- Table for quotes
 CREATE TABLE IF NOT EXISTS quotes (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -18,7 +17,8 @@ CREATE TABLE IF NOT EXISTS quotes (
     total_price REAL,
     status TEXT CHECK(status IN ('draft', 'sent', 'accepted', 'rejected')),
     created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-    updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+    updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
+    archived INTEGER DEFAULT 0
 );
 
 -- Table for quote items
@@ -28,6 +28,6 @@ CREATE TABLE IF NOT EXISTS quote_items (
     component_id INTEGER,
     quantity INTEGER DEFAULT 1,
     total_price REAL,
-    FOREIGN KEY(quote_id) REFERENCES quotes(id),
-    FOREIGN KEY(component_id) REFERENCES components(id)
+    FOREIGN KEY (quote_id) REFERENCES quotes(id) ON DELETE CASCADE,
+    FOREIGN KEY (component_id) REFERENCES components(id) ON DELETE CASCADE
 );

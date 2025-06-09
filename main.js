@@ -25,15 +25,9 @@ function createWindow() {
       label: "File",
       submenu: [
         {
-          label: "Add Component",
+          label: "Admin Settings",
           click: () => {
-            win.webContents.send("menu-add-component");
-          },
-        },
-        {
-          label: "Export Last Quote",
-          click: () => {
-            win.webContents.send("menu-export-quote");
+            win.webContents.send("menu-admin-settings");
           },
         },
         { type: "separator" },
@@ -54,6 +48,22 @@ app.whenReady().then(() => {
 });
 
 // IPC handlers
+
+
+ipcMain.handle("render-admin-settings", async () => {
+  const win = new BrowserWindow({
+    width: 800,
+    height: 600,
+    webPreferences: {
+      preload: path.join(__dirname, 'preload.js'),
+      contextIsolation: true,
+      nodeIntegration: false,
+    }
+  });
+
+  win.loadFile('frontend/admin-settings.html');
+});
+
 ipcMain.handle("get-components", () => db.getComponents());
 ipcMain.handle("delete-component", (_, id) => db.deleteComponent(id));
 ipcMain.handle("archive-component", (_, id) => db.archiveComponent(id));
@@ -82,6 +92,10 @@ ipcMain.handle("load-quote", () => {
 
 ipcMain.handle("get-quote", (event, id) => {
   return db.getQuote(id); // must return a full quote object
+});
+
+ipcMain.handle("delete-quote", (event, id) => {
+  return db.deleteQuote(id);
 });
 
 ipcMain.handle("preview-quote", async (event, quote) => {
@@ -159,3 +173,63 @@ function getSuggestions(items) {
   }
   return suggestions;
 }
+
+///////////////////////
+// User Management
+///////////////////////
+ipcMain.handle("add-user", async (event, user) => {
+  return db.addUser(user);
+});
+
+ipcMain.handle("remove-user", async (event, userId) => {
+  return db.removeUser(userId);
+});
+
+ipcMain.handle("get-users", async () => {
+  return db.getUsers();
+});
+
+///////////////////////
+// Content Management
+///////////////////////
+ipcMain.handle("add-content", async (event, content) => {
+  return db.addContent(content);
+});
+
+ipcMain.handle("edit-content", async (event, contentId, newContent) => {
+  return db.editContent(contentId, newContent);
+});
+
+ipcMain.handle("delete-content", async (event, contentId) => {
+  return db.deleteContent(contentId);
+});
+
+///////////////////////
+// System Settings
+///////////////////////
+ipcMain.handle("update-settings", async (event, settings) => {
+  return db.updateSettings(settings);
+});
+
+ipcMain.handle("get-logs", async () => {
+  return db.getLogs();
+});
+
+ipcMain.handle("backup-data", async () => {
+  return db.backupData();
+});
+
+///////////////////////
+// Database Settings
+///////////////////////
+ipcMain.handle("configure-database", async (event, config) => {
+  return db.configureDatabase(config);
+});
+
+ipcMain.handle("optimize-database", async () => {
+  return db.optimizeDatabase();
+});
+
+ipcMain.handle("clear-database", async () => {
+  return db.clearDatabase();
+});
