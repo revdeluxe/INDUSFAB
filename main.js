@@ -233,3 +233,18 @@ ipcMain.handle("optimize-database", async () => {
 ipcMain.handle("clear-database", async () => {
   return db.clearDatabase();
 });
+
+ipcMain.on('login-attempt', (event, { username, password }) => {
+  db.login(username, password)
+    .then(user => {
+      if (user) {
+        event.sender.send('login-success', user);
+      } else {
+        event.sender.send('login-failure', 'Invalid credentials');
+      }
+    })
+    .catch(err => {
+      console.error("Login error:", err);
+      event.sender.send('login-failure', 'An error occurred during login');
+    });
+});

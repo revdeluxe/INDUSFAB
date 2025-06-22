@@ -31,3 +31,15 @@ CREATE TABLE IF NOT EXISTS quote_items (
     FOREIGN KEY (quote_id) REFERENCES quotes(id) ON DELETE CASCADE,
     FOREIGN KEY (component_id) REFERENCES components(id) ON DELETE CASCADE
 );
+
+-- Table for users
+CREATE TABLE IF NOT EXISTS users (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    username TEXT UNIQUE,
+    password TEXT,
+    email TEXT UNIQUE,
+    role TEXT CHECK(role IN ('admin', 'user')),
+    created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+    updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
+    max_login_attempts INTEGER DEFAULT 3
+);

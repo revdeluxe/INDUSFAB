@@ -4,6 +4,58 @@
   <meta charset="UTF-8" />
   <title>IndusFab Quotation App</title>
   <link rel="stylesheet" href="style.css" />
+  <style>
+    /* Modal overlay */
+    .modal {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100vw; height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: rgba(0, 0, 0, 0.3);
+      z-index: 999;
+    }
+
+    /* Hide initially */
+    .hidden {
+      display: none;
+    }
+
+    /* Content box */
+    .modal-content {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      width: 300px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+      text-align: center;
+    }
+
+    /* Input styling */
+    .modal-content input {
+      width: 90%;
+      margin: 8px 0;
+      padding: 10px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+    }
+
+    /* Button group */
+    .modal-buttons {
+      display: flex;
+      justify-content: space-around;
+      margin-top: 10px;
+    }
+
+    .modal-buttons button {
+      padding: 8px 12px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+  </style>
 </head>
 <body>
   <!-- Navigation Buttons -->
@@ -24,7 +76,7 @@
   <div id="addComponentContainer" style="display: none;"></div>
 
   <div id="footer">
-    <p>IndusFab Quotation App &copy; 2023</p>
+    <p>IndusFab Quotation App &copy; 2025</p>
   </div>
 
   <!-- Scripts -->
@@ -36,9 +88,19 @@
       addComponentContainer: document.getElementById("addComponentContainer")
     };
 
+    function showLoginAlert() {
+      document.getElementById("loginAlert").style.display = "block";
+    }
+
+    let isLoggedIn = false; // Track login status
+
     function toggleContainer(showId) {
+      if (!isLoggedIn) {
+      showLoginAlert(); // Show login alert if not logged in
+      return;
+      }
       Object.entries(containers).forEach(([id, el]) => {
-        el.style.display = (id === showId) ? "block" : "none";
+      el.style.display = (id === showId) ? "block" : "none";
       });
     }
 

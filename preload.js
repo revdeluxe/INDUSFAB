@@ -58,5 +58,10 @@ contextBridge.exposeInMainWorld('api', {
   deleteComponent: (id) => ipcRenderer.invoke("delete-component", id),
   archiveComponent: (id) => ipcRenderer.invoke("archive-component", id),
   exportComponents: () => ipcRenderer.invoke("export-components"),
-  importComponents: () => ipcRenderer.invoke('import-components')
+  importComponents: () => ipcRenderer.invoke('import-components'),
+
+  // Login
+  login: (credentials) => ipcRenderer.invoke('login', credentials),
+  send: (channel, data) => {if (channel === 'login-attempt') {ipcRenderer.send(channel, data);}}
 });
+

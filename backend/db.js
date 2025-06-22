@@ -134,6 +134,11 @@ function getQuote(id) {
   return quote;
 }
 
+function login(username, password) {
+  const user = db.prepare("SELECT * FROM users WHERE username = ? AND password = ?").get(username, password);
+  return user ? { user, userId: user.id } : null;
+}
+
 
 module.exports = {
   initDatabase,

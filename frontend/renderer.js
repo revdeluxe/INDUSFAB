@@ -874,4 +874,36 @@ async function clearDatabase() {
     }
   }
 }
-window.clearDatabase = clearDatabase;
+const modal = document.getElementById('loginModal');
+const loginBtn = document.getElementById('loginConfirm');
+const cancelBtn = document.getElementById('loginCancel');
+
+function showLoginModal() {
+  modal.classList.remove('hidden');
+  document.getElementById('loginUsername').focus();
+}
+
+function hideLoginModal() {
+  modal.classList.add('hidden');
+}
+
+loginBtn.onclick = () => {
+  const username = document.getElementById('loginUsername').value;
+  const password = document.getElementById('loginPassword').value;
+
+  // Send to main process if needed (example below)
+  window.api.send('login-attempt', { username, password });
+
+  hideLoginModal();
+};
+
+cancelBtn.onclick = hideLoginModal;
+
+// Optionally close modal on ESC key or clicking outside
+window.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') hideLoginModal();
+});
+
+modal.addEventListener('click', (e) => {
+  if (e.target === modal) hideLoginModal(); // outside click
+});
