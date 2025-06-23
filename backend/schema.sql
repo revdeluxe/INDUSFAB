@@ -43,3 +43,20 @@ CREATE TABLE IF NOT EXISTS users (
     updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
     max_login_attempts INTEGER DEFAULT 3
 );
+
+CREATE TABLE IF NOT EXISTS otps (
+  username TEXT,
+  otp TEXT,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS login_attempts (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    username TEXT,
+    timestamp INTEGER,
+    success INTEGER
+);
+CREATE TABLE IF NOT EXISTS locked_users (
+    username TEXT PRIMARY KEY,
+    locked_until INTEGER
+);

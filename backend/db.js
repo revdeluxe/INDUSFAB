@@ -15,9 +15,6 @@ if (!fs.existsSync(dbPath)) {
 
 const db = new Database(dbPath);
 
-// For SELECTs use db.prepare(...).all() or .get()
-// For INSERT, UPDATE, DELETE use db.prepare(...).run()
-
 function getComponents() {
   return db.prepare("SELECT * FROM components WHERE archived = 0").all();
 }
@@ -114,8 +111,6 @@ function getAllQuotes() {
 function deleteQuote(id) {
   const stmt = db.prepare("DELETE FROM quotes WHERE id = ?");
   stmt.run(id);
-  
-  // Also delete associated quote items
   db.prepare("DELETE FROM quote_items WHERE quote_id = ?").run(id);
 }
 
@@ -139,6 +134,61 @@ function login(username, password) {
   return user ? { user, userId: user.id } : null;
 }
 
+function getCurrentUser() {
+  return db.prepare("SELECT * FROM users WHERE is_logged_in = 1").get();
+}
+function getCurrentUserId() {
+  const user = getCurrentUser();
+  return user ? user.id : null;
+}
+function getCurrentUserRole() {
+  const user = getCurrentUser();
+  return user ? user.role : null;
+}
+function getCurrentUserPermissions() {
+  const user = getCurrentUser();
+  return user ? user.permissions : null;
+}
+function getCurrentUserSettings() {
+  const user = getCurrentUser();
+  return user ? user.settings : null;
+}
+function updateCurrentUserSettings(settings) {
+  const userId = getCurrentUserId();
+  if (!userId) return false;
+
+  const stmt = db.prepare("UPDATE users SET settings = ? WHERE id = ?");
+  const result = stmt.run(JSON.stringify(settings), userId);
+  return result.changes > 0;
+}
+function register(user) {
+  const stmt = db.prepare("INSERT INTO users (username, password, role) VALUES (?, ?, ?)");
+  const info = stmt.run(user.username, user.password, user.role);
+  return info.lastInsertRowid;
+}
+function checkUsernameAvailability(username) {
+  const user = db.prepare("SELECT * FROM users WHERE username = ?").get(username);
+  return !user;
+}
+function getUsers() {
+  return db.prepare("SELECT * FROM users").all();
+}
+function removeUser(userId) {
+  const stmt = db.prepare("DELETE FROM users WHERE id = ?");
+  stmt.run(userId);
+}
+function updateAdmin(admin) {
+  const stmt = db.prepare("UPDATE admin SET name = ?, email = ? WHERE id = ?");
+  const result = stmt.run(admin.name, admin.email, admin.id);
+  return result.changes > 0;
+}
+function getAdmin() {
+  return db.prepare("SELECT * FROM admin").get();
+}
+
+function generateOTP() {
+  return Math.floor(100000 + Math.random() * 900000).toString();
+}
 
 module.exports = {
   initDatabase,
@@ -153,5 +203,19 @@ module.exports = {
   createQuote,
   getAllQuotes,
   getQuote,
+  login,
+  getCurrentUser,
+  getCurrentUserId,
+  getCurrentUserRole,
+  getCurrentUserPermissions,
+  getCurrentUserSettings,
+  updateCurrentUserSettings,
+  register,
+  checkUsernameAvailability,
+  getUsers,
+  removeUser,
+  updateAdmin,
+  getAdmin,
+  generateOTP,
   deleteQuote
 };

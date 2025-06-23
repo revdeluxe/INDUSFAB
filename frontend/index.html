@@ -54,80 +54,159 @@
       border-radius: 6px;
       cursor: pointer;
     }
+    .modal.hidden {
+      display: none;
+    }
+
 
   </style>
 </head>
 <body>
-  <!-- Navigation Buttons -->
+  <div id="otpModal" class="modal hidden">
+    <div class="modal-content">
+      <h3>Enter OTP</h3>
+      <input type="text" id="otpInput" placeholder="4-digit OTP" />
+      <div class="modal-buttons">
+        <button onclick="submitOTP()">Verify</button>
+        <button onclick="closeOTPModal()">Cancel</button>
+      </div>
+    </div>
+  </div>
+  <div id="warningModal" class="modal hidden">
+    <div class="modal-content">
+      <h3>⚠️ Login Warning</h3>
+      <p id="warningMessage"></p>
+      <div class="modal-buttons">
+        <button onclick="closeWarningModal()">OK</button>
+      </div>
+    </div>
+  </div>
   <div id="nav">
     <h1>IndusFab Quotation App</h1>
     <p>Manage your quotations and components efficiently.</p>
-    <button id="btnQuotation">Quotation Section</button>
-    <button id="btnManagement">Quote Management Section</button>
-    <button id="btnAddComponent">Add Component</button>
   </div>
 
   <hr />
 
-  <!-- Content Sections -->
-
-  <div id="quotationContainer" style="display: none;"></div>
-  <div id="quoteManagementContainer" style="display: none;"></div>
-  <div id="addComponentContainer" style="display: none;"></div>
-
-  <div id="footer">
-    <p>IndusFab Quotation App &copy; 2025</p>
+  <div>
+    <h1>login</h1>
+  
+    <input id="username" type="text" placeholder="Username" />
+    <input id="password" type="password" placeholder="Password" />
+    <button id="loginBtn">Login</button>
   </div>
 
-  <!-- Scripts -->
+  <hr>
+  <div>
+    <h1>Register</h1>
+    <input type="text" id="registerUsername" placeholder="Username" />
+    <input type="password" id="registerPassword" placeholder="Password" />
+    <input type="password" id="registerConfirmPassword" placeholder="Confirm Password" />
+
+    <button id="registerButton">Register</button>
+  </div>
   <script>
-    // Re-define toggleContainer globally so inline onclicks can access it
-    const containers = {
-      quotationContainer: document.getElementById("quotationContainer"),
-      quoteManagementContainer: document.getElementById("quoteManagementContainer"),
-      addComponentContainer: document.getElementById("addComponentContainer")
-    };
-
-    function showLoginAlert() {
-      document.getElementById("loginAlert").style.display = "block";
+    function showWarningModal(message) {
+      const modal = document.getElementById("warningModal");
+      const messageBox = document.getElementById("warningMessage");
+      messageBox.innerText = message;
+      modal.classList.remove("hidden");
     }
 
-    let isLoggedIn = false; // Track login status
-
-    function toggleContainer(showId) {
-      if (!isLoggedIn) {
-      showLoginAlert(); // Show login alert if not logged in
-      return;
-      }
-      Object.entries(containers).forEach(([id, el]) => {
-      el.style.display = (id === showId) ? "block" : "none";
-      });
+    function closeWarningModal() {
+      document.getElementById("warningModal").classList.add("hidden");
     }
 
-    // Because submitQuote needs to gather input values and components,
-    // define a wrapper function called by onclick
-    function submitQuoteHandler() {
-      // You can customize this based on your current loadComponent logic
-      // For example:
-      const clientName = document.getElementById("clientName").value;
-      const quoteDate = document.getElementById("quoteDate").value;
-      const notes = document.getElementById("notes").value;
+  document.addEventListener("DOMContentLoaded", () => {
+    document.getElementById("loginBtn").addEventListener("click", loginWithOTP);
+    document.getElementById("registerButton").addEventListener("click", registerNewUser);
+  });
 
-      // Assume loadComponentList or components array is managed inside renderer.js
-      // You can adapt this call accordingly or forward to your existing submitQuote
-      submitQuote({
-        clientName,
-        date: quoteDate,
-        notes,
-        components: [] // fill this properly from your app state
-      });
+  let currentOTPUser = null;
+
+  async function verifyLoginCredentials(username, password) {
+    const res = await fetch("/api/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username, password })
+    });
+
+    const result = await res.json();
+    return result.success;
+  }
+
+  async function loginWithOTP() {
+    const username = document.getElementById("username").value;
+    const password = document.getElementById("password").value;
+
+    const loginSuccess = await verifyLoginCredentials(username, password);
+    if (!loginSuccess) return alert("Wrong username or password.");
+
+    const otpRes = await fetch("/api/generate-otp", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username })
+    });
+
+    const otpData = await otpRes.json();
+    console.log("🔐 OTP Generated (for testing):", otpData.otp);
+
+    currentOTPUser = username;
+    showOTPModal();
+  }
+
+  function showOTPModal() {
+    document.getElementById("otpModal").classList.remove("hidden");
+    document.getElementById("otpInput").value = ""; // Clear input
+  }
+
+  function closeOTPModal() {
+    document.getElementById("otpModal").classList.add("hidden");
+    currentOTPUser = null;
+  }
+
+  async function submitOTP() {
+    const enteredOtp = document.getElementById("otpInput").value.trim();
+
+    const res = await fetch("/api/verify-otp", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username: currentOTPUser, enteredOtp })
+    });
+
+    const result = await res.json();
+    if (result.success) {
+      alert("✅ OTP verified!");
+      window.location.href = "/dashboard.html";
+    } else {
+      alert("❌ Invalid OTP.");
     }
+  }
 
-    // Similarly, define other global functions if needed (loadQuote, addComponent etc.)
-    // or ensure they are accessible on window from renderer.js
-    
-  </script>
-  <script src="renderer.js"></script>
+  async function registerNewUser() {
+    const username = document.getElementById("registerUsername").value;
+    const password = document.getElementById("registerPassword").value;
+    const confirmPassword = document.getElementById("registerConfirmPassword").value;
+
+    const res = await fetch("/api/register", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username, password, confirmPassword })
+    });
+
+    const result = await res.json();
+    alert(result.message);
+
+    if (result.success) {
+      document.getElementById("registerUsername").value = "";
+      document.getElementById("registerPassword").value = "";
+      document.getElementById("registerConfirmPassword").value = "";
+    }
+  }
+</script>
+<div id="footer">
+  <p>IndusFab Quotation App &copy; 2025</p>
+<script src="renderer.js"></script>
 </body>
 </html>
 

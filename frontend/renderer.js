@@ -874,36 +874,102 @@ async function clearDatabase() {
     }
   }
 }
-const modal = document.getElementById('loginModal');
-const loginBtn = document.getElementById('loginConfirm');
-const cancelBtn = document.getElementById('loginCancel');
 
-function showLoginModal() {
-  modal.classList.remove('hidden');
-  document.getElementById('loginUsername').focus();
+//////////////////////////
+// Login, Registration and Authentication
+//////////////////////////
+async function registerUser() {
+  const username = prompt("Enter username:");
+  const password = prompt("Enter password:");
+  if (!username || !password) {
+    alert("Username and password cannot be empty.");
+    return;
+  }
+  try {
+    await window.api.registerUser({ username, password });
+    alert("User registered successfully.");
+  } catch (error) {
+    console.error("Error registering user:", error);
+    alert("Failed to register user.");
+  }
+}
+window.registerUser = registerUser;
+async function loginUser() {
+  const username = prompt("Enter username:");
+  const password = prompt("Enter password:");
+  if (!username || !password) {
+    alert("Username and password cannot be empty.");
+    return;
+  }
+  try {
+    const user = await window.api.loginUser({ username, password });
+    if (user) {
+      alert(`Welcome, ${user.username}!`);
+      // Redirect to main application or dashboard
+    } else {
+      alert("Invalid credentials.");
+    }
+  } catch (error) {
+    console.error("Error logging in:", error);
+    alert("Failed to log in.");
+  }
+}
+window.loginUser = loginUser;
+async function logoutUser() {
+  try {
+    await window.api.logoutUser();
+    alert("Logged out successfully.");
+    // Redirect to login page or home
+  } catch (error) {
+    console.error("Error logging out:", error);
+    alert("Failed to log out.");
+  }
+}
+window.logoutUser = logoutUser;
+async function changePassword() {
+  const oldPassword = prompt("Enter your current password:");
+  const newPassword = prompt("Enter your new password:");
+  if (!oldPassword || !newPassword) {
+    alert("Both fields are required.");
+    return;
+  }
+  try {
+    await window.api.changePassword({ oldPassword, newPassword });
+    alert("Password changed successfully.");
+  } catch (error) {
+    console.error("Error changing password:", error);
+    alert("Failed to change password.");
+  }
+}
+window.changePassword = changePassword;
+
+let currentOTPUser = null;
+
+function showOTPModal(username) {
+  currentOTPUser = username;
+  document.getElementById("otpModal").classList.remove("hidden");
 }
 
-function hideLoginModal() {
-  modal.classList.add('hidden');
+function closeOTPModal() {
+  document.getElementById("otpModal").classList.add("hidden");
+  currentOTPUser = null;
 }
 
-loginBtn.onclick = () => {
-  const username = document.getElementById('loginUsername').value;
-  const password = document.getElementById('loginPassword').value;
+async function submitOTP() {
+  const enteredOtp = document.getElementById("otpInput").value;
 
-  // Send to main process if needed (example below)
-  window.api.send('login-attempt', { username, password });
+  const res = await fetch("/api/verify-otp", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ username: currentOTPUser, enteredOtp })
+  });
 
-  hideLoginModal();
-};
+  const result = await res.json();
 
-cancelBtn.onclick = hideLoginModal;
-
-// Optionally close modal on ESC key or clicking outside
-window.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape') hideLoginModal();
-});
-
-modal.addEventListener('click', (e) => {
-  if (e.target === modal) hideLoginModal(); // outside click
-});
+  if (result.success) {
+    alert("✅ OTP verified!");
+    window.location.href = "/dashboard.html";
+  } else {
+    alert("❌ Invalid OTP.");
+  }
+}

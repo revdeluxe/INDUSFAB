@@ -4,6 +4,7 @@ const path = require("path");
 const fs = require("fs");
 const PDFDocument = require("pdfkit");
 const db = require("./backend/db.js");
+const server = require("./server.js");
 
 // Removed redundant __dirname declaration
 
@@ -18,7 +19,8 @@ function createWindow() {
     }
   });
 
-  win.loadFile('frontend/index.html');
+  win.loadURL("http://localhost:3000"); // ✅ CORRECT
+
 
   const menuTemplate = [
     {
@@ -61,7 +63,8 @@ ipcMain.handle("render-admin-settings", async () => {
     }
   });
 
-  win.loadFile('frontend/admin-settings.html');
+  win.loadURL("http://localhost:3000/admin-settings.html");
+
 });
 
 ipcMain.handle("get-components", () => db.getComponents());
@@ -248,3 +251,114 @@ ipcMain.on('login-attempt', (event, { username, password }) => {
       event.sender.send('login-failure', 'An error occurred during login');
     });
 });
+ipcMain.on('logout', (event) => {
+  db.logout()
+    .then(() => {
+      event.sender.send('logout-success');
+    })
+    .catch(err => {
+      console.error("Logout error:", err);
+      event.sender.send('logout-failure', 'An error occurred during logout');
+    });
+});
+ipcMain.on('register-user', (event, user) => {
+  db.registerUser(user)
+    .then(() => {
+      event.sender.send('register-success');
+    })
+    .catch(err => {
+      console.error("Registration error:", err);
+      event.sender.send('register-failure', 'An error occurred during registration');
+    });
+});
+ipcMain.on('get-user-info', (event, userId) => {
+  db.getUserInfo(userId)
+    .then(user => {
+      event.sender.send('user-info', user);
+    })
+    .catch(err => {
+      console.error("Get user info error:", err);
+      event.sender.send('user-info-error', 'An error occurred while fetching user info');
+    });
+});
+ipcMain.on('update-user-info', (event, userId, newInfo) => {
+  db.updateUserInfo(userId, newInfo)
+    .then(() => {
+      event.sender.send('update-success');
+    })
+    .catch(err => {
+      console.error("Update user info error:", err);
+      event.sender.send('update-failure', 'An error occurred while updating user info');
+    });
+});
+ipcMain.on('delete-user', (event, userId) => {
+  db.deleteUser(userId)
+    .then(() => {
+      event.sender.send('delete-success');
+    })
+    .catch(err => {
+      console.error("Delete user error:", err);
+      event.sender.send('delete-failure', 'An error occurred while deleting user');
+    });
+});
+ipcMain.on('get-current-user', (event) => {
+  db.getCurrentUser()
+    .then(user => {
+      event.sender.send('current-user', user);
+    })
+    .catch(err => {
+      console.error("Get current user error:", err);
+      event.sender.send('current-user-error', 'An error occurred while fetching current user');
+    });
+});
+ipcMain.on('get-current-user-id', (event) => {
+  db.getCurrentUserId()
+    .then(userId => {
+      event.sender.send('current-user-id', userId);
+    })
+    .catch(err => {
+      console.error("Get current user ID error:", err);
+      event.sender.send('current-user-id-error', 'An error occurred while fetching current user ID');
+    });
+});
+ipcMain.on('get-current-user-role', (event) => {
+  db.getCurrentUserRole()
+    .then(role => {
+      event.sender.send('current-user-role', role);
+    })
+    .catch(err => {
+      console.error("Get current user role error:", err);
+      event.sender.send('current-user-role-error', 'An error occurred while fetching current user role');
+    });
+});
+ipcMain.on('get-current-user-permissions', (event) => {
+  db.getCurrentUserPermissions()
+    .then(permissions => {
+      event.sender.send('current-user-permissions', permissions);
+    })
+    .catch(err => {
+      console.error("Get current user permissions error:", err);
+      event.sender.send('current-user-permissions-error', 'An error occurred while fetching current user permissions');
+    });
+});
+ipcMain.on('get-current-user-settings', (event) => {
+  db.getCurrentUserSettings()
+    .then(settings => {
+      event.sender.send('current-user-settings', settings);
+    })
+    .catch(err => {
+      console.error("Get current user settings error:", err);
+      event.sender.send('current-user-settings-error', 'An error occurred while fetching current user settings');
+    });
+});
+ipcMain.on('update-current-user-settings', (event, settings) => {
+  db.updateCurrentUserSettings(settings)
+    .then(() => {
+      event.sender.send('update-settings-success');
+    })
+    .catch(err => {
+      console.error("Update current user settings error:", err);
+      event.sender.send('update-settings-failure', 'An error occurred while updating current user settings');
+    });
+});
+

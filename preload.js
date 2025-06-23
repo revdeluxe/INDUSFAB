@@ -62,6 +62,27 @@ contextBridge.exposeInMainWorld('api', {
 
   // Login
   login: (credentials) => ipcRenderer.invoke('login', credentials),
-  send: (channel, data) => {if (channel === 'login-attempt') {ipcRenderer.send(channel, data);}}
+  logout: () => ipcRenderer.invoke('logout'),
+  isLoggedIn: () => ipcRenderer.invoke('is-logged-in'),
+  getCurrentUser: () => ipcRenderer.invoke('get-current-user'),
+  getCurrentUserId: () => ipcRenderer.invoke('get-current-user-id'),
+  getCurrentUserRole: () => ipcRenderer.invoke('get-current-user-role'),
+  getCurrentUserPermissions: () => ipcRenderer.invoke('get-current-user-permissions'),
+  getCurrentUserSettings: () => ipcRenderer.invoke('get-current-user-settings'),
+  updateCurrentUserSettings: (settings) => ipcRenderer.invoke('update-current-user-settings', settings),
+
+  //Register
+  register: (user) => ipcRenderer.invoke('register', user),
+  checkUsernameAvailability: (username) => ipcRenderer.invoke('check-username-availability', username),
+  checkEmailAvailability: (email) => ipcRenderer.invoke('check-email-availability', email),
+  resetPassword: (email) => ipcRenderer.invoke('reset-password', email),
+  changePassword: (currentPassword, newPassword) => ipcRenderer.invoke('change-password', currentPassword, newPassword),
+
+  // Notifications
+  showNotification: (title, body) => ipcRenderer.invoke('show-notification', {
+    title,
+    body
+  })
+  
 });
 
